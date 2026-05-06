@@ -1,7 +1,6 @@
 import { store } from '../state/store';
 import { tick, addLog, setRunning } from '../state/slices/gameSlice';
 import { updateAgent, setAgentPosition } from '../state/slices/agentsSlice';
-import { updateJob, addLog as _addLog } from '../state/slices/gameSlice';
 import { updateJob as updateJobAction } from '../state/slices/jobsSlice';
 import { findPath } from '../core/graph/pathfinder';
 import { GraphNode, GraphEdge } from '../core/graph/types';
@@ -18,7 +17,11 @@ const nodesMap: Record<string, GraphNode> = {};
 const edgesArr: GraphEdge[] = graphData.edges as GraphEdge[];
 
 for (const n of graphData.nodes) {
-  nodesMap[n.id] = n;
+  nodesMap[n.id] = n as GraphNode;
+}
+
+function nodeName(id: string): string {
+  return (nodesMap[id] as GraphNode)?.tags?.name || id;
 }
 
 export function startGame() {
@@ -77,7 +80,7 @@ function assignJobs() {
       pathSegment: 0,
     }));
     store.dispatch(updateJobAction({ id: job.id, status: 'assigned', assignedAgentId: agent.id }));
-    store.dispatch(addLog(`${agent.name} принял задание: доставка в ${job.targetLocation}.`));
+    store.dispatch(addLog(`${agent.name} принял задание: доставка в «${nodeName(job.targetLocation)}».`));
   }
 }
 
@@ -100,11 +103,19 @@ function animationFrame(now: number) {
       store.dispatch(setAgentPosition({ id: agent.id, lat: lastNode.lat, lng: lastNode.lng, nodeId: lastNode.id }));
 
       const job = agent.currentJobId ? state.jobs.jobs[agent.currentJobId] : null;
-      store.dispatch(updateAgent({ id: agent.id, state: 'idle', currentJobId: undefined, targetNodePath: undefined, pathProgress: 0, pathSegment: 0, currentNodeId: lastNode.id }));
+      store.dispatch(updateAgent({
+        id: agent.id,
+        state: 'idle',
+        currentJobId: undefined,
+        targetNodePath: undefined,
+        pathProgress: 0,
+        pathSegment: 0,
+        currentNodeId: lastNode.id,
+      }));
 
       if (job) {
         store.dispatch(updateJobAction({ id: job.id, status: 'completed' }));
-        store.dispatch(addLog(`${agent.name} выполнил задание!`));
+        store.dispatch(addLog(`${agent.name} доставил груз в «${nodeName(job.targetLocation)}»!`));
         for (const [res, amt] of Object.entries(job.reward)) {
           store.dispatch({ type: 'game/gainResource', payload: { resource: res, amount: amt } });
         }

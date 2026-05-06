@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import React from 'react';
+import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip } from 'react-leaflet';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { selectAgent } from '../../../state/slices/gameSlice';
 import graphData from '../../../assets/maps/snow_valley.json';
@@ -10,7 +10,12 @@ const edges = graphData.edges as GraphEdge[];
 const nodesMap: Record<string, GraphNode> = {};
 for (const n of nodes) nodesMap[n.id] = n;
 
-const CENTER: [number, number] = [43.116, 131.885];
+const CENTER: [number, number] = [43.2000, 131.9450];
+
+const BOUNDS: [[number, number], [number, number]] = [
+  [42.96, 131.72],
+  [43.30, 132.12],
+];
 
 const EDGE_COLOR: Record<number, string> = {
   0: '#3a4a2a',
@@ -28,7 +33,11 @@ export default function GameMap() {
   return (
     <MapContainer
       center={CENTER}
-      zoom={16}
+      zoom={15}
+      minZoom={12}
+      maxZoom={18}
+      maxBounds={BOUNDS}
+      maxBoundsViscosity={1.0}
       style={{ width: '100%', height: '100%' }}
       zoomControl={true}
     >

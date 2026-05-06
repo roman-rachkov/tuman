@@ -1,6 +1,15 @@
 import React from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { openModal } from '../../../state/slices/gameSlice';
+import graphData from '../../../assets/maps/snow_valley.json';
+import { GraphNode } from '../../../core/graph/types';
+
+const nodesMap: Record<string, GraphNode> = {};
+for (const n of graphData.nodes as GraphNode[]) nodesMap[n.id] = n;
+
+function nodeName(id: string): string {
+  return nodesMap[id]?.tags?.name || id;
+}
 
 const STATUS_CLASS: Record<string, string> = {
   pending: 'status-pending',
@@ -14,6 +23,12 @@ const STATUS_LABEL: Record<string, string> = {
   assigned: 'Выполняется',
   completed: 'Готово',
   failed: 'Провалено',
+};
+
+const RESOURCE_LABEL: Record<string, string> = {
+  food: 'еда',
+  water: 'вода',
+  scrap: 'металлолом',
 };
 
 export default function JobPanel() {
@@ -51,10 +66,10 @@ export default function JobPanel() {
               </span>
             </div>
             <div style={{ color: '#6a6050', fontSize: '0.7rem', marginTop: '2px' }}>
-              → {job.targetLocation}
+              → {nodeName(job.targetLocation)}
             </div>
             <div style={{ color: '#5a7050', fontSize: '0.7rem' }}>
-              Награда: {Object.entries(job.reward).map(([k, v]) => `${v} ${k}`).join(', ')}
+              Награда: {Object.entries(job.reward).map(([k, v]) => `${v} ${RESOURCE_LABEL[k] || k}`).join(', ')}
             </div>
           </div>
         ))}

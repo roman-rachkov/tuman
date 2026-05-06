@@ -7,6 +7,14 @@ import graphData from '../../../assets/maps/snow_valley.json';
 import { GraphNode } from '../../../core/graph/types';
 
 const nodes = graphData.nodes as GraphNode[];
+const nodesMap: Record<string, GraphNode> = {};
+for (const n of nodes) nodesMap[n.id] = n;
+
+const RESOURCE_LABEL: Record<string, string> = {
+  food: 'Еда',
+  water: 'Вода',
+  scrap: 'Металлолом',
+};
 
 let jobCounter = 1;
 
@@ -18,6 +26,10 @@ export default function NewJobModal() {
   const [targetLocation, setTargetLocation] = useState(nodes[2].id);
   const [rewardResource, setRewardResource] = useState<ResourceType>('food');
   const [rewardAmount, setRewardAmount] = useState(10);
+
+  function nodeName(id: string): string {
+    return nodesMap[id]?.tags?.name || id;
+  }
 
   function handleCreate() {
     if ((resources[rewardResource] ?? 0) < rewardAmount) {
@@ -36,7 +48,7 @@ export default function NewJobModal() {
 
     dispatch(spendResource({ resource: rewardResource, amount: rewardAmount }));
     dispatch(addJob(job));
-    dispatch(addLog(`Создана заявка на доставку в ${targetLocation}.`));
+    dispatch(addLog(`Создана заявка: доставка в «${nodeName(targetLocation)}».`));
     dispatch(closeModal());
   }
 
@@ -57,9 +69,9 @@ export default function NewJobModal() {
         <div className="form-group">
           <label>Вознаграждение (ресурс)</label>
           <select value={rewardResource} onChange={e => setRewardResource(e.target.value as ResourceType)}>
-            <option value="food">Еда</option>
-            <option value="water">Вода</option>
-            <option value="scrap">Металлолом</option>
+            {Object.entries(RESOURCE_LABEL).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
           </select>
         </div>
 
