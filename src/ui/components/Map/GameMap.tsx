@@ -10,7 +10,7 @@ const edges = graphData.edges as GraphEdge[];
 const nodesMap: Record<string, GraphNode> = {};
 for (const n of nodes) nodesMap[n.id] = n;
 
-const CENTER: [number, number] = [43.2000, 131.9450];
+const CENTER: [number, number] = [43.115, 131.900];
 
 const BOUNDS: [[number, number], [number, number]] = [
   [42.96, 131.72],

@@ -18,7 +18,7 @@ const initialState: AgentsState = {
     agent_2: {
       id: 'agent_2',
       name: 'Лиса',
-      currentNodeId: 'n_5',
+      currentNodeId: 'n_211',
       state: 'idle',
       inventory: {},
       speed: 2.0,
