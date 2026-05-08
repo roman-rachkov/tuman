@@ -1,5 +1,38 @@
 import { GraphNode, GraphEdge } from './types';
 
+interface AdjacencyList {
+  [nodeId: string]: Array<{ nodeId: string; edge: GraphEdge }>;
+}
+
+// Кэшируем adjacency list для избежания повторных вычислений
+const adjacencyCache = new Map<string, { edgesHash: number; adjacency: AdjacencyList }>();
+
+function computeEdgesHash(edges: GraphEdge[], filter?: (edge: GraphEdge) => boolean): number {
+  let hash = 0;
+  for (let i = 0; i < edges.length; i++) {
+    const edge = edges[i];
+    if (!filter || filter(edge)) {
+      hash = ((hash << 5) - hash + edge.id.charCodeAt(0)) | 0;
+    }
+  }
+  return hash;
+}
+
+function buildAdjacencyList(
+  edges: GraphEdge[],
+  filter?: (edge: GraphEdge) => boolean
+): AdjacencyList {
+  const adjacency: AdjacencyList = {};
+  for (const edge of edges) {
+    if (filter && !filter(edge)) continue;
+    if (!adjacency[edge.from]) adjacency[edge.from] = [];
+    if (!adjacency[edge.to]) adjacency[edge.to] = [];
+    adjacency[edge.from].push({ nodeId: edge.to, edge });
+    adjacency[edge.to].push({ nodeId: edge.from, edge });
+  }
+  return adjacency;
+}
+
 function heuristic(a: GraphNode, b: GraphNode): number {
   const dx = a.lat - b.lat;
   const dy = a.lng - b.lng;
@@ -13,19 +46,25 @@ export function findPath(
   endId: string,
   filter?: (edge: GraphEdge) => boolean
 ): string[] {
+  if (startId === endId) return [startId];
+
+  const edgesHash = computeEdgesHash(edges, filter);
+  const cacheKey = filter ? 'filtered' : 'all';
+  
+  let adjacency: AdjacencyList;
+  const cached = adjacencyCache.get(cacheKey);
+  
+  if (cached && cached.edgesHash === edgesHash) {
+    adjacency = cached.adjacency;
+  } else {
+    adjacency = buildAdjacencyList(edges, filter);
+    adjacencyCache.set(cacheKey, { edgesHash, adjacency });
+  }
+
   const openSet = new Set<string>([startId]);
   const cameFrom: Record<string, string> = {};
   const gScore: Record<string, number> = { [startId]: 0 };
   const fScore: Record<string, number> = { [startId]: heuristic(nodes[startId], nodes[endId]) };
-
-  const adjacency: Record<string, Array<{ nodeId: string; edge: GraphEdge }>> = {};
-  for (const edge of edges) {
-    if (filter && !filter(edge)) continue;
-    if (!adjacency[edge.from]) adjacency[edge.from] = [];
-    if (!adjacency[edge.to]) adjacency[edge.to] = [];
-    adjacency[edge.from].push({ nodeId: edge.to, edge });
-    adjacency[edge.to].push({ nodeId: edge.from, edge });
-  }
 
   while (openSet.size > 0) {
     let current = '';

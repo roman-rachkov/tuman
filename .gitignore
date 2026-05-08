@@ -1,1 +1,30 @@
-.idea
+```
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+dist/**
+
+# Development tools
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# Package lock files
+package-lock.json
+
+# TypeScript cache
+*.tsbuildinfo
+```
