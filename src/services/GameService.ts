@@ -20,6 +20,15 @@ for (const n of graphData.nodes) {
   nodesMap[n.id] = n as GraphNode;
 }
 
+// Предварительно вычисляем edge lookup map для быстрого доступа
+const edgeLookup: Map<string, GraphEdge | undefined> = new Map();
+for (const edge of edgesArr) {
+  const key1 = `${edge.from}-${edge.to}`;
+  const key2 = `${edge.to}-${edge.from}`;
+  edgeLookup.set(key1, edge);
+  edgeLookup.set(key2, edge);
+}
+
 function nodeName(id: string): string {
   return (nodesMap[id] as GraphNode)?.tags?.name || id;
 }
@@ -125,10 +134,8 @@ function animationFrame(now: number) {
 
     const fromNode = nodesMap[path[seg]];
     const toNode = nodesMap[path[seg + 1]];
-    const edge = edgesArr.find(e =>
-      (e.from === path[seg] && e.to === path[seg + 1]) ||
-      (e.to === path[seg] && e.from === path[seg + 1])
-    );
+    // Используем кэшированный lookup вместо поиска в массиве
+    const edge = edgeLookup.get(`${path[seg]}-${path[seg + 1]}`) || edgeLookup.get(`${path[seg + 1]}-${path[seg]}`);
 
     const speed = edge ? (edge.state === 1 ? edge.baseSpeed * 0.5 : edge.baseSpeed) : 1.4;
     const length = edge ? edge.length : 300;
